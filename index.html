@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with Clean Print</title>
+  <title>Leaflet Map Tools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,16 +17,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- EasyPrint -->
-  <script src="https://rawcdn.githack.com/rowanwins/leaflet-easyPrint/2.1.9/dist/bundle.js"></script>
-
   <style>
     html, body, #map { height: 100%; margin: 0; }
     .top-buttons {
       position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 999;
+      top: 50px; /* pushed down to avoid overlap with search */
+      left: 10px;
+      z-index: 1000;
       background: white;
       padding: 6px;
       border-radius: 4px;
@@ -35,20 +32,24 @@
     button {
       margin: 3px;
       padding: 5px 10px;
+      font-size: 14px;
     }
     input[type="file"] {
       display: none;
     }
     label {
       cursor: pointer;
+      margin: 0 5px;
+    }
+    @media print {
+      .top-buttons { display: none !important; }
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div class="top-buttons">
-    <button onclick="easyPrintMap.printMap('A4Portrait', 'Leaflet Map')">🖨️ Easy Print</button>
-    <button onclick="window.print()">🖨️ Browser Print</button>
+    <button onclick="window.print()">🖨️ Print</button>
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
     <label>📥 Import <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" /></label>
   </div>
@@ -57,11 +58,12 @@
     const map = L.map('map').setView([51.505, -0.09], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     const drawnLayer = L.featureGroup().addTo(map);
-    L.Control.geocoder().addTo(map);
+    L.Control.geocoder({ position: 'topright' }).addTo(map);
 
     map.pm.addControls({
       position: 'topleft',
@@ -104,14 +106,6 @@
       };
       reader.readAsText(file);
     }
-
-    const easyPrintMap = L.easyPrint({
-      tileLayer: map.tileLayer,
-      sizeModes: ['A4Portrait', 'A4Landscape'],
-      filename: 'leaflet-map',
-      exportOnly: true,
-      hideControlContainer: false
-    }).addTo(map);
   </script>
 </body>
 </html>
