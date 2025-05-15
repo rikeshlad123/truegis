@@ -1,0 +1,1 @@
+var sacData = {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': [[[-3.2, 54.2], [-2.8, 54.2], [-2.8, 54.6], [-3.2, 54.6], [-3.2, 54.2]]]}}]};
