@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map Tools</title>
+  <title>Leaflet Browser Print</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,11 +17,14 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+  <!-- Leaflet Browser Print -->
+  <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
+
   <style>
     html, body, #map { height: 100%; margin: 0; }
     .top-buttons {
       position: absolute;
-      top: 50px; /* pushed down to avoid overlap with search */
+      top: 10px;
       left: 10px;
       z-index: 1000;
       background: white;
@@ -41,6 +44,7 @@
       cursor: pointer;
       margin: 0 5px;
     }
+
     @media print {
       .top-buttons { display: none !important; }
     }
@@ -48,8 +52,8 @@
 </head>
 <body>
   <div id="map"></div>
+
   <div class="top-buttons">
-    <button onclick="window.print()">🖨️ Print</button>
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
     <label>📥 Import <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" /></label>
   </div>
@@ -63,6 +67,7 @@
     }).addTo(map);
 
     const drawnLayer = L.featureGroup().addTo(map);
+
     L.Control.geocoder({ position: 'topright' }).addTo(map);
 
     map.pm.addControls({
@@ -106,6 +111,15 @@
       };
       reader.readAsText(file);
     }
+
+    // Add Leaflet Browser Print Button
+    L.control.browserPrint({
+      position: 'topleft',
+      title: 'Print Map',
+      documentTitle: 'Leaflet Map',
+      printModes: ["Portrait", "Landscape", "Auto"],
+      closePopupsOnPrint: false
+    }).addTo(map);
   </script>
 </body>
 </html>
