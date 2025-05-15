@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Leaflet Starter Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet core -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Draw -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+  <!-- Leaflet Geocoder -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+  />
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+  <!-- Leaflet Measure -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet-measure-path@3.0.0/leaflet-measure-path.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-measure-path@3.0.0/leaflet-measure-path.min.js"></script>
+
+  <style>
+    body, html, #map { height: 100%; margin: 0; }
+    .leaflet-control-geocoder-form input {
+      width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([51.505, -0.09], 13);
+
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const esriSat = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { attribution: 'Tiles © Esri' }
+    );
+
+    L.control.layers({ OSM: osm, "Esri Satellite": esriSat }).addTo(map);
+    L.control.scale().addTo(map);
+
+    // Mouse coordinates
+    map.on("mousemove", function(e) {
+      map._container.title = `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
+    });
+
+    // Draw tools
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    new L.Control.Draw({
+      edit: { featureGroup: drawnItems },
+      draw: {
+        polygon: true,
+        polyline: true,
+        rectangle: true,
+        circle: false,
+        marker: true
+      }
+    }).addTo(map);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+      drawnItems.addLayer(e.layer);
+    });
+
+    // Geocoder
+    L.Control.geocoder().addTo(map);
+
+    // Measurement
+    L.control.measurePath({ showClearControl: true }).addTo(map);
+  </script>
+</body>
+</html>
