@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map – Middle Right Tools</title>
+  <title>Leaflet Map with Top Toolbar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -27,48 +27,41 @@
       padding: 0;
     }
 
-    /* Top-center JSON buttons */
-    .json-buttons {
+    .top-toolbar {
       position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 1000;
-      display: flex;
-      gap: 8px;
       background: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      border-bottom: 1px solid #ccc;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
-    .json-buttons button {
+    .top-toolbar button {
       font-size: 13px;
-      padding: 4px 10px;
+      padding: 6px 12px;
       cursor: pointer;
     }
 
-    .json-buttons input[type="file"] {
+    .top-toolbar input[type="file"] {
       display: none;
     }
 
-    /* Move Leaflet top-right controls to middle-right */
-    .leaflet-top.leaflet-right {
-      top: 50% !important;
-      transform: translateY(-50%);
-      right: 10px;
-    }
-
     @media print {
-      .json-buttons { display: none !important; }
+      .top-toolbar { display: none !important; }
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- Top-center JSON buttons -->
-  <div class="json-buttons">
+  <!-- Top HTML bar for JSON buttons -->
+  <div class="top-toolbar">
     <button onclick="exportGeoJSON()">📤 Export</button>
     <button onclick="document.getElementById('fileInput').click()">📥 Import</button>
     <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
@@ -77,7 +70,6 @@
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Base tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -85,7 +77,6 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
 
-    // Drawing controls
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -103,7 +94,6 @@
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
-    // Export GeoJSON
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -115,7 +105,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Import GeoJSON
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -130,16 +119,16 @@
       reader.readAsText(file);
     }
 
-    // Print Button
+    // Add Print Button (top-right)
     L.control.browserPrint({
-      position: 'topright', // We visually move this to middle-right with CSS
+      position: 'topright',
       title: 'Print Map',
       documentTitle: 'Leaflet Map',
       printModes: ["Portrait", "Landscape", "Auto"],
       closePopupsOnPrint: false
     }).addTo(map);
 
-    // Search Box
+    // Add Geocoder (top-right)
     L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
