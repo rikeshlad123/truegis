@@ -119,8 +119,8 @@
       reader.readAsText(file);
     }
 
-    // Add Print Control to map
-    L.control.browserPrint({
+    // Add Print Control
+    const printControl = L.control.browserPrint({
       position: 'topleft',
       title: 'Print Map',
       documentTitle: 'Leaflet Map',
@@ -128,10 +128,8 @@
       closePopupsOnPrint: false
     }).addTo(map);
 
-    // Trigger print from custom button
     window.printMap = () => {
-      const printButton = document.querySelector('.leaflet-control-browser-print a');
-      if (printButton) printButton.click();
+      printControl.print();
     };
   </script>
 </body>
