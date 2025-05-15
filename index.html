@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map – Responsive UI</title>
+  <title>Leaflet Map in Container</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,13 +17,34 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Browser Print -->
+  <!-- Print -->
   <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
   <style>
-    html, body, #map {
-      height: 100%;
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f2f2f2;
+    }
+
+    .map-container {
+      width: 95vmin;
+      height: 95vmin;
+      max-width: 800px;
+      max-height: 800px;
+      background: white;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
     }
 
     .geojson-buttons {
@@ -51,27 +72,8 @@
       display: none;
     }
 
-    /* Let native Leaflet controls breathe on mobile */
     .leaflet-top.leaflet-right .leaflet-control {
       margin-top: 10px;
-    }
-
-    @media (max-width: 768px) {
-      .geojson-buttons {
-        max-width: 90%;
-        font-size: 13px;
-        padding: 8px;
-      }
-
-      .geojson-buttons button {
-        font-size: 13px;
-        padding: 5px 8px;
-      }
-
-      .leaflet-control {
-        transform: scale(0.95);
-        transform-origin: top right;
-      }
     }
 
     @media print {
@@ -80,19 +82,19 @@
   </style>
 </head>
 <body>
-  <div id="map"></div>
+  <div class="map-container">
+    <div id="map"></div>
 
-  <!-- Bottom-left GeoJSON buttons -->
-  <div class="geojson-buttons">
-    <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
-    <button onclick="document.getElementById('fileInput').click()">📥 Import GeoJSON</button>
-    <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
+    <div class="geojson-buttons">
+      <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
+      <button onclick="document.getElementById('fileInput').click()">📥 Import GeoJSON</button>
+      <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
+    </div>
   </div>
 
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Base map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -100,7 +102,6 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
 
-    // Drawing tools
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -118,7 +119,6 @@
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
-    // Export GeoJSON
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -130,7 +130,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Import GeoJSON
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -154,7 +153,7 @@
       closePopupsOnPrint: false
     }).addTo(map);
 
-    // Geocoder control (top right)
+    // Search control (top right)
     L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
