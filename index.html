@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map in Container</title>
+  <title>Leaflet Map Responsive</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -32,7 +32,7 @@
     }
 
     .json-buttons {
-      margin-top: 10px;
+      margin: 12px 0 6px 0;
       display: flex;
       gap: 10px;
       background: white;
@@ -53,15 +53,13 @@
     }
 
     .map-container {
-      margin-top: 10px;
-      width: 95vmin;
-      height: 95vmin;
-      max-width: 800px;
-      max-height: 800px;
-      border: 1px solid #ccc;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-      position: relative;
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      height: calc(100% - 70px); /* accounting for button bar */
+      box-shadow: 0 0 8px rgba(0,0,0,0.08);
       background: white;
+      position: relative;
     }
 
     #map {
@@ -76,18 +74,29 @@
     @media print {
       .json-buttons { display: none !important; }
     }
+
+    @media (max-width: 600px) {
+      .json-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .json-buttons button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- JSON Export/Import buttons (top center, outside map box) -->
+  <!-- JSON Export/Import buttons (top center) -->
   <div class="json-buttons">
     <button onclick="exportGeoJSON()">📤 Export</button>
     <button onclick="document.getElementById('fileInput').click()">📥 Import</button>
     <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
   </div>
 
-  <!-- Centered map box -->
+  <!-- Responsive map container -->
   <div class="map-container">
     <div id="map"></div>
   </div>
