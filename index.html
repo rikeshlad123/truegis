@@ -2,26 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TrueGIS - Leaflet Tools Demo</title>
+  <title>Leaflet Map with Export Features</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet CSS and JS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Leaflet-Geoman -->
-  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css" />
+  <!-- Leaflet-Geoman CSS and JS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css"
+  />
   <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.min.js"></script>
 
-  <!-- Leaflet Browser Print -->
-  <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
-
-  <!-- Leaflet Control Geocoder -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <!-- Leaflet Control Geocoder CSS and JS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+  />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+  <!-- dom-to-image JS -->
+  <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/src/dom-to-image.min.js"></script>
+
   <style>
-    html, body, #map { height: 100%; margin: 0; }
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     .top-buttons {
       position: absolute;
       top: 10px;
@@ -54,25 +67,26 @@
     <label>📥 Import
       <input type="file" id="fileInput" accept=".geojson,application/json" onchange="importGeoJSON(event)">
     </label>
-    <button onclick="window.printMap()">🖨️ Print</button>
+    <button onclick="exportMapAsImage()">🖼️ Export as Image</button>
   </div>
 
   <script>
+    // Initialize the map
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Basemap
+    // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Geocoder
+    // Add Geocoder control
     L.Control.geocoder().addTo(map);
 
     // Feature Group for drawn items
     const drawnLayer = L.featureGroup().addTo(map);
 
-    // Geoman Controls
+    // Add Geoman controls
     map.pm.addControls({
       position: 'topleft',
       drawCircle: false,
@@ -87,10 +101,11 @@
       removalMode: true
     });
 
+    // Add created layers to drawnLayer
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
-    // Export GeoJSON
+    // Export GeoJSON function
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -102,7 +117,7 @@
       URL.revokeObjectURL(url);
     }
 
-    // Import GeoJSON
+    // Import GeoJSON function
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -119,18 +134,25 @@
       reader.readAsText(file);
     }
 
-    // Add Print Control
-    const printControl = L.control.browserPrint({
-      position: 'topleft',
-      title: 'Print Map',
-      documentTitle: 'Leaflet Map',
-      printModes: ["Portrait", "Landscape", "Auto"],
-      closePopupsOnPrint: false
-    }).addTo(map);
-
-    window.printMap = () => {
-      printControl.print();
-    };
+    // Export map as image function
+    function exportMapAsImage() {
+      // Ensure all tiles are loaded
+      map.once('idle', function() {
+        domtoimage.toBlob(document.getElementById('map'))
+          .then(function(blob) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'map.png';
+            a.click();
+            URL.revokeObjectURL(a.href);
+          })
+          .catch(function(error) {
+            console.error('Error exporting map as image:', error);
+          });
+      });
+      // Trigger map rendering
+      map.invalidateSize();
+    }
   </script>
 </body>
 </html>
