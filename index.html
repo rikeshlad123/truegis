@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with Draw & Print</title>
+  <title>Leaflet GeoJSON + Print</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,15 +17,18 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Browser Print -->
+  <!-- Leaflet Browser Print -->
   <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
   <style>
-    html, body, #map { height: 100%; margin: 0; }
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+    }
 
     .top-buttons {
       position: absolute;
-      top: 60px;
+      top: 10px;
       right: 10px;
       z-index: 1000;
       background: white;
@@ -48,6 +51,10 @@
       display: none;
     }
 
+    .leaflet-top.leaflet-right .leaflet-control {
+      margin-top: 10px;
+    }
+
     @media print {
       .top-buttons { display: none !important; }
     }
@@ -65,14 +72,16 @@
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
+    // Base map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // Feature group for drawn items
     const drawnLayer = L.featureGroup().addTo(map);
-    L.Control.geocoder({ position: 'topright' }).addTo(map);
 
+    // Draw controls
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -87,9 +96,11 @@
       removalMode: true
     });
 
+    // Add drawn layer to group
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
+    // Export function
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -101,6 +112,7 @@
       URL.revokeObjectURL(url);
     }
 
+    // Import function
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -115,13 +127,17 @@
       reader.readAsText(file);
     }
 
+    // Print control (top right under buttons)
     L.control.browserPrint({
-      position: 'bottomleft',
+      position: 'topright',
       title: 'Print Map',
       documentTitle: 'Leaflet Map',
       printModes: ["Portrait", "Landscape", "Auto"],
       closePopupsOnPrint: false
     }).addTo(map);
+
+    // Search control (at bottom of stack)
+    L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
 </html>
