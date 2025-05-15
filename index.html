@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with Top Toolbar</title>
+  <title>Leaflet Map with Toolbar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Leaflet Browser Print -->
+  <!-- Print -->
   <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
   <style>
@@ -27,6 +27,10 @@
       padding: 0;
     }
 
+    body {
+      overflow: hidden;
+    }
+
     .top-toolbar {
       position: absolute;
       top: 0;
@@ -34,22 +38,30 @@
       right: 0;
       z-index: 1000;
       background: white;
-      padding: 6px 12px;
+      padding: 4px 10px;
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: 8px;
       border-bottom: 1px solid #ccc;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      height: 38px;
+      align-items: center;
     }
 
     .top-toolbar button {
       font-size: 13px;
-      padding: 6px 12px;
+      padding: 4px 10px;
+      height: 28px;
       cursor: pointer;
+      line-height: 1;
     }
 
     .top-toolbar input[type="file"] {
       display: none;
+    }
+
+    .leaflet-top.leaflet-right .leaflet-control {
+      margin-top: 50px; /* So Print/Search sit just below the toolbar */
     }
 
     @media print {
@@ -60,7 +72,7 @@
 <body>
   <div id="map"></div>
 
-  <!-- Top HTML bar for JSON buttons -->
+  <!-- HTML Toolbar -->
   <div class="top-toolbar">
     <button onclick="exportGeoJSON()">📤 Export</button>
     <button onclick="document.getElementById('fileInput').click()">📥 Import</button>
@@ -119,7 +131,7 @@
       reader.readAsText(file);
     }
 
-    // Add Print Button (top-right)
+    // Print Button
     L.control.browserPrint({
       position: 'topright',
       title: 'Print Map',
@@ -128,7 +140,7 @@
       closePopupsOnPrint: false
     }).addTo(map);
 
-    // Add Geocoder (top-right)
+    // Geocoder
     L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
