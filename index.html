@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet GeoJSON + Print + Search</title>
+  <title>Leaflet Map with Print, Search & GeoJSON</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,15 +17,18 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+  <!-- Leaflet Browser Print -->
+  <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
+
   <style>
     html, body, #map {
       height: 100%;
       margin: 0;
     }
 
-    .top-buttons {
+    .bottom-buttons {
       position: absolute;
-      top: 10px;
+      bottom: 10px;
       right: 10px;
       z-index: 1000;
       background: white;
@@ -35,7 +38,7 @@
       font-size: 14px;
     }
 
-    .top-buttons button {
+    .bottom-buttons button {
       display: block;
       width: 100%;
       margin: 5px 0;
@@ -44,36 +47,33 @@
       cursor: pointer;
     }
 
-    .top-buttons input[type="file"] {
+    .bottom-buttons input[type="file"] {
       display: none;
     }
 
-    .top-buttons input[type="text"] {
-      width: 100%;
-      padding: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
+    .leaflet-top.leaflet-right .leaflet-control {
+      margin-top: 10px;
     }
 
     @media print {
-      .top-buttons { display: none !important; }
+      .bottom-buttons { display: none !important; }
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <div class="top-buttons">
+  <!-- GeoJSON Import/Export buttons in bottom right -->
+  <div class="bottom-buttons">
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
     <button onclick="document.getElementById('fileInput').click()">📥 Import GeoJSON</button>
     <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
-    <button onclick="window.print()">🖨️ Print Map</button>
-    <input type="text" id="searchBox" placeholder="🔍 Search..." />
   </div>
 
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
+    // Basemap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -81,6 +81,7 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
 
+    // Geoman draw/edit tools
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -98,6 +99,7 @@
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
+    // Export GeoJSON
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -109,6 +111,7 @@
       URL.revokeObjectURL(url);
     }
 
+    // Import GeoJSON
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -123,24 +126,17 @@
       reader.readAsText(file);
     }
 
-    // Simple search trigger on enter key
-    document.getElementById('searchBox').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        const query = e.target.value;
-        if (!query) return;
+    // Print Button (Top Right)
+    L.control.browserPrint({
+      position: 'topright',
+      title: 'Print Map',
+      documentTitle: 'Leaflet Map',
+      printModes: ["Portrait", "Landscape", "Auto"],
+      closePopupsOnPrint: false
+    }).addTo(map);
 
-        L.Control.Geocoder.nominatim().geocode(query, function(results) {
-          if (results.length > 0) {
-            map.setView(results[0].center, 14);
-            L.marker(results[0].center).addTo(map)
-              .bindPopup(results[0].name || query)
-              .openPopup();
-          } else {
-            alert("No results found.");
-          }
-        });
-      }
-    });
+    // Search Button (Top Right)
+    L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
 </html>
