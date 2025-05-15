@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map Tools</title>
+  <title>Leaflet Map with Clean Print</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,14 +17,11 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- dom-to-image -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+  <!-- EasyPrint -->
+  <script src="https://rawcdn.githack.com/rowanwins/leaflet-easyPrint/2.1.9/dist/bundle.js"></script>
 
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-    }
+    html, body, #map { height: 100%; margin: 0; }
     .top-buttons {
       position: absolute;
       top: 10px;
@@ -33,10 +30,10 @@
       background: white;
       padding: 6px;
       border-radius: 4px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
     button {
-      margin: 2px;
+      margin: 3px;
       padding: 5px 10px;
     }
     input[type="file"] {
@@ -44,29 +41,26 @@
     }
     label {
       cursor: pointer;
-      margin: 0 5px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div class="top-buttons">
+    <button onclick="easyPrintMap.printMap('A4Portrait', 'Leaflet Map')">🖨️ Easy Print</button>
+    <button onclick="window.print()">🖨️ Browser Print</button>
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
     <label>📥 Import <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" /></label>
-    <button onclick="exportMapAsImage()">🖼️ Export PNG</button>
   </div>
 
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      crossOrigin: true // Needed for dom-to-image
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     const drawnLayer = L.featureGroup().addTo(map);
-
-    // Controls
     L.Control.geocoder().addTo(map);
 
     map.pm.addControls({
@@ -104,43 +98,20 @@
       reader.onload = function(e) {
         const geojson = JSON.parse(e.target.result);
         const layer = L.geoJSON(geojson, {
-          onEachFeature: (feature, layer) => {
-            drawnLayer.addLayer(layer);
-          }
+          onEachFeature: (feature, layer) => drawnLayer.addLayer(layer)
         });
         map.fitBounds(layer.getBounds());
       };
       reader.readAsText(file);
     }
 
-    function exportMapAsImage() {
-      // Ensure all tiles are fully loaded before rendering
-      let tilesLoaded = 0;
-      const totalTiles = document.querySelectorAll('.leaflet-tile').length;
-
-      if (totalTiles === 0) return console.warn("No tiles loaded yet");
-
-      document.querySelectorAll('.leaflet-tile').forEach(img => {
-        if (img.complete) tilesLoaded++;
-        else img.onload = () => {
-          tilesLoaded++;
-          if (tilesLoaded >= totalTiles) renderMapImage();
-        };
-      });
-
-      if (tilesLoaded >= totalTiles) renderMapImage();
-
-      function renderMapImage() {
-        domtoimage.toBlob(document.getElementById('map'))
-          .then(blob => {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'leaflet-map.png';
-            a.click();
-          })
-          .catch(err => console.error('Image export failed', err));
-      }
-    }
+    const easyPrintMap = L.easyPrint({
+      tileLayer: map.tileLayer,
+      sizeModes: ['A4Portrait', 'A4Landscape'],
+      filename: 'leaflet-map',
+      exportOnly: true,
+      hideControlContainer: false
+    }).addTo(map);
   </script>
 </body>
 </html>
