@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map – Top Center JSON Buttons</title>
+  <title>Leaflet Map – Middle Right Tools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -27,6 +27,7 @@
       padding: 0;
     }
 
+    /* Top-center JSON buttons */
     .json-buttons {
       position: absolute;
       top: 10px;
@@ -51,8 +52,11 @@
       display: none;
     }
 
-    .leaflet-top.leaflet-right .leaflet-control {
-      margin-top: 10px;
+    /* Move Leaflet top-right controls to middle-right */
+    .leaflet-top.leaflet-right {
+      top: 50% !important;
+      transform: translateY(-50%);
+      right: 10px;
     }
 
     @media print {
@@ -73,6 +77,7 @@
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
+    // Base tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -80,6 +85,7 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
 
+    // Drawing controls
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -97,6 +103,7 @@
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
+    // Export GeoJSON
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -108,6 +115,7 @@
       URL.revokeObjectURL(url);
     }
 
+    // Import GeoJSON
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -122,14 +130,16 @@
       reader.readAsText(file);
     }
 
+    // Print Button
     L.control.browserPrint({
-      position: 'topright',
+      position: 'topright', // We visually move this to middle-right with CSS
       title: 'Print Map',
       documentTitle: 'Leaflet Map',
       printModes: ["Portrait", "Landscape", "Auto"],
       closePopupsOnPrint: false
     }).addTo(map);
 
+    // Search Box
     L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
