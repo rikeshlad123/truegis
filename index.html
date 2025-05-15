@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TrueGIS Prebuilt Print Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body { margin: 0; height: 100%; font-family: sans-serif; }
+    #map { height: 85vh; }
+    .controls { text-align: center; padding: 10px; }
+    button { margin: 5px; padding: 10px; }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <h2 style="text-align:center;">TrueGIS Print Tool (Prebuilt)</h2>
+  <div id="map"></div>
+  <div class="controls">
+    <button onclick="printMapA()">Print A (Guaranteed)</button>
+    <button onclick="printMapB()">Print B (With Label)</button>
+    <button onclick="printMapC()">Print C (Inkmap Alt Layout)</button>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
