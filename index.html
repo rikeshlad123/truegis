@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with GeoJSON, Print, Search</title>
+  <title>Leaflet Map – Responsive UI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Leaflet Browser Print -->
+  <!-- Browser Print -->
   <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
   <style>
@@ -51,8 +51,27 @@
       display: none;
     }
 
+    /* Let native Leaflet controls breathe on mobile */
     .leaflet-top.leaflet-right .leaflet-control {
       margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .geojson-buttons {
+        max-width: 90%;
+        font-size: 13px;
+        padding: 8px;
+      }
+
+      .geojson-buttons button {
+        font-size: 13px;
+        padding: 5px 8px;
+      }
+
+      .leaflet-control {
+        transform: scale(0.95);
+        transform-origin: top right;
+      }
     }
 
     @media print {
@@ -63,7 +82,7 @@
 <body>
   <div id="map"></div>
 
-  <!-- GeoJSON buttons (bottom-left) -->
+  <!-- Bottom-left GeoJSON buttons -->
   <div class="geojson-buttons">
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
     <button onclick="document.getElementById('fileInput').click()">📥 Import GeoJSON</button>
@@ -73,7 +92,7 @@
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Basemap
+    // Base map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -81,7 +100,7 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
 
-    // Drawing Tools
+    // Drawing tools
     map.pm.addControls({
       position: 'topleft',
       drawMarker: true,
@@ -126,7 +145,7 @@
       reader.readAsText(file);
     }
 
-    // Print Button (top-right)
+    // Print control (top right)
     L.control.browserPrint({
       position: 'topright',
       title: 'Print Map',
@@ -135,7 +154,7 @@
       closePopupsOnPrint: false
     }).addTo(map);
 
-    // Search (top-right)
+    // Geocoder control (top right)
     L.Control.geocoder({ position: 'topright' }).addTo(map);
   </script>
 </body>
