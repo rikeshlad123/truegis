@@ -1,1 +1,0 @@
-var sssiData = {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'geometry': {'type': 'Polygon', 'coordinates': [[[-3, 54], [-2.5, 54], [-2.5, 54.5], [-3, 54.5], [-3, 54]]]}}]};
