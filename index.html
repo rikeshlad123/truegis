@@ -30,28 +30,31 @@
       background: white;
       padding: 6px;
       border-radius: 4px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
     input[type="file"] {
       display: none;
     }
     label {
       cursor: pointer;
+      margin-right: 10px;
+    }
+    button {
       margin: 0 5px;
+      padding: 5px 10px;
+      font-size: 14px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
   <div class="top-buttons">
-    <label>
-      📤 Export
-      <button onclick="exportGeoJSON()">GeoJSON</button>
-    </label>
-    <label>
-      📥 Import
+    <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
+    <label>📥 Import
       <input type="file" id="fileInput" accept=".geojson,application/json" onchange="importGeoJSON(event)">
     </label>
-    <button onclick="L.control.browserPrint().print()">🖨️ Print</button>
+    <button onclick="window.printMap()">🖨️ Print</button>
   </div>
 
   <script>
@@ -66,8 +69,10 @@
     // Geocoder
     L.Control.geocoder().addTo(map);
 
-    // Geoman Controls
+    // Feature Group for drawn items
     const drawnLayer = L.featureGroup().addTo(map);
+
+    // Geoman Controls
     map.pm.addControls({
       position: 'topleft',
       drawCircle: false,
@@ -113,6 +118,19 @@
       };
       reader.readAsText(file);
     }
+
+    // Add Print Control
+    const printControl = L.control.browserPrint({
+      position: 'topleft',
+      title: 'Print Map',
+      documentTitle: 'Leaflet Map',
+      printModes: ["Portrait", "Landscape", "Auto"],
+      closePopupsOnPrint: false
+    }).addTo(map);
+
+    window.printMap = () => {
+      printControl.print();
+    };
   </script>
 </body>
 </html>
