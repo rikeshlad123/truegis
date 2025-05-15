@@ -2,91 +2,117 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Starter Map</title>
+  <title>TrueGIS - Leaflet Tools Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet core -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Leaflet Draw -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"
-  />
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <!-- Leaflet-Geoman -->
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css" />
+  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.min.js"></script>
 
-  <!-- Leaflet Geocoder -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
-  />
+  <!-- Leaflet Browser Print -->
+  <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
+
+  <!-- Leaflet Control Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Leaflet Measure -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/leaflet-measure-path@3.0.0/leaflet-measure-path.css"
-  />
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-measure-path@3.0.0/leaflet-measure-path.min.js"></script>
-
   <style>
-    body, html, #map { height: 100%; margin: 0; }
-    .leaflet-control-geocoder-form input {
-      width: 150px;
+    html, body, #map { height: 100%; margin: 0; }
+    .top-buttons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 6px;
+      border-radius: 4px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    label {
+      cursor: pointer;
+      margin: 0 5px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div class="top-buttons">
+    <label>
+      📤 Export
+      <button onclick="exportGeoJSON()">GeoJSON</button>
+    </label>
+    <label>
+      📥 Import
+      <input type="file" id="fileInput" accept=".geojson,application/json" onchange="importGeoJSON(event)">
+    </label>
+    <button onclick="L.control.browserPrint().print()">🖨️ Print</button>
+  </div>
 
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Basemap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const esriSat = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { attribution: 'Tiles © Esri' }
-    );
-
-    L.control.layers({ OSM: osm, "Esri Satellite": esriSat }).addTo(map);
-    L.control.scale().addTo(map);
-
-    // Mouse coordinates
-    map.on("mousemove", function(e) {
-      map._container.title = `Lat: ${e.latlng.lat.toFixed(5)}, Lng: ${e.latlng.lng.toFixed(5)}`;
-    });
-
-    // Draw tools
-    const drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-    new L.Control.Draw({
-      edit: { featureGroup: drawnItems },
-      draw: {
-        polygon: true,
-        polyline: true,
-        rectangle: true,
-        circle: false,
-        marker: true
-      }
-    }).addTo(map);
-
-    map.on(L.Draw.Event.CREATED, function (e) {
-      drawnItems.addLayer(e.layer);
-    });
-
     // Geocoder
     L.Control.geocoder().addTo(map);
 
-    // Measurement
-    L.control.measurePath({ showClearControl: true }).addTo(map);
+    // Geoman Controls
+    const drawnLayer = L.featureGroup().addTo(map);
+    map.pm.addControls({
+      position: 'topleft',
+      drawCircle: false,
+      drawCircleMarker: false,
+      drawMarker: true,
+      drawPolygon: true,
+      drawPolyline: true,
+      drawRectangle: true,
+      editMode: true,
+      dragMode: true,
+      cutPolygon: true,
+      removalMode: true
+    });
+
+    map.on('pm:create', e => drawnLayer.addLayer(e.layer));
+    map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
+
+    // Export GeoJSON
+    function exportGeoJSON() {
+      const data = drawnLayer.toGeoJSON();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'map.geojson';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Import GeoJSON
+    function importGeoJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const geojson = JSON.parse(e.target.result);
+        const layer = L.geoJSON(geojson, {
+          onEachFeature: (feature, layer) => {
+            drawnLayer.addLayer(layer);
+          }
+        });
+        map.fitBounds(layer.getBounds());
+      };
+      reader.readAsText(file);
+    }
   </script>
 </body>
 </html>
