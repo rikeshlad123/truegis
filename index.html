@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Browser Print</title>
+  <title>Leaflet Map with Print & Tools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -22,24 +22,29 @@
 
   <style>
     html, body, #map { height: 100%; margin: 0; }
+
     .top-buttons {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 60px; /* below draw/print controls */
+      right: 10px;
       z-index: 1000;
       background: white;
       padding: 6px;
       border-radius: 4px;
       box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
+
     button {
       margin: 3px;
       padding: 5px 10px;
       font-size: 14px;
+      cursor: pointer;
     }
+
     input[type="file"] {
       display: none;
     }
+
     label {
       cursor: pointer;
       margin: 0 5px;
@@ -61,15 +66,19 @@
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
+    // Base map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // Feature layer for drawn content
     const drawnLayer = L.featureGroup().addTo(map);
 
+    // Geocoder search
     L.Control.geocoder({ position: 'topright' }).addTo(map);
 
+    // Draw/edit/remove tools
     map.pm.addControls({
       position: 'topleft',
       drawCircle: false,
@@ -87,6 +96,7 @@
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
+    // GeoJSON export
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -98,6 +108,7 @@
       URL.revokeObjectURL(url);
     }
 
+    // GeoJSON import
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -112,10 +123,10 @@
       reader.readAsText(file);
     }
 
-    // Add Leaflet Browser Print Button
+    // Print control (icon shows bottom-left)
     L.control.browserPrint({
-      position: 'topleft',
-      title: 'Print Map',
+      position: 'bottomleft',
+      title: 'Print map',
       documentTitle: 'Leaflet Map',
       printModes: ["Portrait", "Landscape", "Auto"],
       closePopupsOnPrint: false
