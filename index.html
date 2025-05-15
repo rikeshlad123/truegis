@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with Print & Tools</title>
+  <title>Leaflet Draw Style Controls</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -17,39 +17,39 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- Leaflet Browser Print -->
+  <!-- Browser Print -->
   <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
 
   <style>
     html, body, #map { height: 100%; margin: 0; }
-
     .top-buttons {
       position: absolute;
-      top: 60px; /* below draw/print controls */
+      top: 60px;
       right: 10px;
       z-index: 1000;
       background: white;
-      padding: 6px;
+      padding: 10px;
       border-radius: 4px;
       box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
-
-    button {
-      margin: 3px;
-      padding: 5px 10px;
       font-size: 14px;
-      cursor: pointer;
     }
-
+    .top-buttons label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .top-buttons input[type="number"],
+    .top-buttons input[type="color"],
+    .top-buttons input[type="text"] {
+      width: 100%;
+    }
+    button {
+      margin: 5px 0;
+      padding: 5px 10px;
+      width: 100%;
+    }
     input[type="file"] {
       display: none;
     }
-
-    label {
-      cursor: pointer;
-      margin: 0 5px;
-    }
-
     @media print {
       .top-buttons { display: none !important; }
     }
@@ -59,44 +59,74 @@
   <div id="map"></div>
 
   <div class="top-buttons">
+    <label>🖌️ Color:
+      <input type="color" id="colorPicker" value="#1e90ff" />
+    </label>
+    <label>📏 Line Width:
+      <input type="number" id="lineWidth" value="3" min="1" max="10" />
+    </label>
+    <label>➖ Dash Style (e.g. 5,5):
+      <input type="text" id="dashStyle" value="" />
+    </label>
+
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
-    <label>📥 Import <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" /></label>
+    <label><input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />📥 Import GeoJSON</label>
   </div>
 
   <script>
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Base map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Feature layer for drawn content
     const drawnLayer = L.featureGroup().addTo(map);
-
-    // Geocoder search
     L.Control.geocoder({ position: 'topright' }).addTo(map);
 
-    // Draw/edit/remove tools
+    // Draw style options
+    function getDrawStyle() {
+      return {
+        color: document.getElementById('colorPicker').value,
+        fillColor: document.getElementById('colorPicker').value,
+        fillOpacity: 0.4,
+        weight: parseInt(document.getElementById('lineWidth').value),
+        dashArray: document.getElementById('dashStyle').value
+      };
+    }
+
+    function applyStyleOptions() {
+      map.pm.setGlobalOptions({ pathOptions: getDrawStyle() });
+    }
+
+    // Watch for input changes
+    ['colorPicker', 'lineWidth', 'dashStyle'].forEach(id => {
+      document.getElementById(id).addEventListener('input', applyStyleOptions);
+    });
+
+    applyStyleOptions();
+
     map.pm.addControls({
       position: 'topleft',
-      drawCircle: false,
-      drawCircleMarker: false,
       drawMarker: true,
       drawPolygon: true,
       drawPolyline: true,
       drawRectangle: true,
+      drawCircle: true,
+      drawCircleMarker: true,
       editMode: true,
       dragMode: true,
       cutPolygon: true,
       removalMode: true
     });
 
-    map.on('pm:create', e => drawnLayer.addLayer(e.layer));
+    map.on('pm:create', e => {
+      e.layer.setStyle(getDrawStyle());
+      drawnLayer.addLayer(e.layer);
+    });
+
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
-    // GeoJSON export
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -108,7 +138,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // GeoJSON import
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -123,10 +152,10 @@
       reader.readAsText(file);
     }
 
-    // Print control (icon shows bottom-left)
+    // Add Print Button
     L.control.browserPrint({
       position: 'bottomleft',
-      title: 'Print map',
+      title: 'Print Map',
       documentTitle: 'Leaflet Map',
       printModes: ["Portrait", "Landscape", "Auto"],
       closePopupsOnPrint: false
