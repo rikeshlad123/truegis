@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Draw Style Controls</title>
+  <title>Leaflet Map with Draw & Print</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -22,6 +22,7 @@
 
   <style>
     html, body, #map { height: 100%; margin: 0; }
+
     .top-buttons {
       position: absolute;
       top: 60px;
@@ -33,23 +34,20 @@
       box-shadow: 0 0 5px rgba(0,0,0,0.2);
       font-size: 14px;
     }
-    .top-buttons label {
+
+    .top-buttons button {
       display: block;
-      margin-bottom: 5px;
-    }
-    .top-buttons input[type="number"],
-    .top-buttons input[type="color"],
-    .top-buttons input[type="text"] {
       width: 100%;
-    }
-    button {
       margin: 5px 0;
-      padding: 5px 10px;
-      width: 100%;
+      padding: 6px 10px;
+      font-size: 14px;
+      cursor: pointer;
     }
-    input[type="file"] {
+
+    .top-buttons input[type="file"] {
       display: none;
     }
+
     @media print {
       .top-buttons { display: none !important; }
     }
@@ -59,18 +57,9 @@
   <div id="map"></div>
 
   <div class="top-buttons">
-    <label>🖌️ Color:
-      <input type="color" id="colorPicker" value="#1e90ff" />
-    </label>
-    <label>📏 Line Width:
-      <input type="number" id="lineWidth" value="3" min="1" max="10" />
-    </label>
-    <label>➖ Dash Style (e.g. 5,5):
-      <input type="text" id="dashStyle" value="" />
-    </label>
-
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
-    <label><input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />📥 Import GeoJSON</label>
+    <button onclick="document.getElementById('fileInput').click()">📥 Import GeoJSON</button>
+    <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
   </div>
 
   <script>
@@ -83,28 +72,6 @@
 
     const drawnLayer = L.featureGroup().addTo(map);
     L.Control.geocoder({ position: 'topright' }).addTo(map);
-
-    // Draw style options
-    function getDrawStyle() {
-      return {
-        color: document.getElementById('colorPicker').value,
-        fillColor: document.getElementById('colorPicker').value,
-        fillOpacity: 0.4,
-        weight: parseInt(document.getElementById('lineWidth').value),
-        dashArray: document.getElementById('dashStyle').value
-      };
-    }
-
-    function applyStyleOptions() {
-      map.pm.setGlobalOptions({ pathOptions: getDrawStyle() });
-    }
-
-    // Watch for input changes
-    ['colorPicker', 'lineWidth', 'dashStyle'].forEach(id => {
-      document.getElementById(id).addEventListener('input', applyStyleOptions);
-    });
-
-    applyStyleOptions();
 
     map.pm.addControls({
       position: 'topleft',
@@ -120,11 +87,7 @@
       removalMode: true
     });
 
-    map.on('pm:create', e => {
-      e.layer.setStyle(getDrawStyle());
-      drawnLayer.addLayer(e.layer);
-    });
-
+    map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
     function exportGeoJSON() {
@@ -152,7 +115,6 @@
       reader.readAsText(file);
     }
 
-    // Add Print Button
     L.control.browserPrint({
       position: 'bottomleft',
       title: 'Print Map',
