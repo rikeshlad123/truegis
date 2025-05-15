@@ -2,61 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leaflet Map with Export Features</title>
+  <title>Leaflet Map Tools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet CSS and JS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Leaflet-Geoman CSS and JS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css"
-  />
+  <!-- Geoman -->
+  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css" />
   <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.min.js"></script>
 
-  <!-- Leaflet Control Geocoder CSS and JS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
-  />
+  <!-- Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-  <!-- dom-to-image JS -->
-  <script src="https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/src/dom-to-image.min.js"></script>
+  <!-- dom-to-image -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
 
   <style>
     html, body, #map {
       height: 100%;
       margin: 0;
-      padding: 0;
     }
     .top-buttons {
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 1000;
+      z-index: 999;
       background: white;
       padding: 6px;
       border-radius: 4px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    }
+    button {
+      margin: 2px;
+      padding: 5px 10px;
     }
     input[type="file"] {
       display: none;
     }
     label {
       cursor: pointer;
-      margin-right: 10px;
-    }
-    button {
       margin: 0 5px;
-      padding: 5px 10px;
-      font-size: 14px;
-      cursor: pointer;
     }
   </style>
 </head>
@@ -64,29 +52,23 @@
   <div id="map"></div>
   <div class="top-buttons">
     <button onclick="exportGeoJSON()">📤 Export GeoJSON</button>
-    <label>📥 Import
-      <input type="file" id="fileInput" accept=".geojson,application/json" onchange="importGeoJSON(event)">
-    </label>
-    <button onclick="exportMapAsImage()">🖼️ Export as Image</button>
+    <label>📥 Import <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" /></label>
+    <button onclick="exportMapAsImage()">🖼️ Export PNG</button>
   </div>
 
   <script>
-    // Initialize the map
     const map = L.map('map').setView([51.505, -0.09], 13);
 
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      crossOrigin: true // Needed for dom-to-image
     }).addTo(map);
 
-    // Add Geocoder control
-    L.Control.geocoder().addTo(map);
-
-    // Feature Group for drawn items
     const drawnLayer = L.featureGroup().addTo(map);
 
-    // Add Geoman controls
+    // Controls
+    L.Control.geocoder().addTo(map);
+
     map.pm.addControls({
       position: 'topleft',
       drawCircle: false,
@@ -101,11 +83,9 @@
       removalMode: true
     });
 
-    // Add created layers to drawnLayer
     map.on('pm:create', e => drawnLayer.addLayer(e.layer));
     map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
 
-    // Export GeoJSON function
     function exportGeoJSON() {
       const data = drawnLayer.toGeoJSON();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -117,7 +97,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Import GeoJSON function
     function importGeoJSON(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -134,24 +113,33 @@
       reader.readAsText(file);
     }
 
-    // Export map as image function
     function exportMapAsImage() {
-      // Ensure all tiles are loaded
-      map.once('idle', function() {
+      // Ensure all tiles are fully loaded before rendering
+      let tilesLoaded = 0;
+      const totalTiles = document.querySelectorAll('.leaflet-tile').length;
+
+      if (totalTiles === 0) return console.warn("No tiles loaded yet");
+
+      document.querySelectorAll('.leaflet-tile').forEach(img => {
+        if (img.complete) tilesLoaded++;
+        else img.onload = () => {
+          tilesLoaded++;
+          if (tilesLoaded >= totalTiles) renderMapImage();
+        };
+      });
+
+      if (tilesLoaded >= totalTiles) renderMapImage();
+
+      function renderMapImage() {
         domtoimage.toBlob(document.getElementById('map'))
-          .then(function(blob) {
+          .then(blob => {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'map.png';
+            a.download = 'leaflet-map.png';
             a.click();
-            URL.revokeObjectURL(a.href);
           })
-          .catch(function(error) {
-            console.error('Error exporting map as image:', error);
-          });
-      });
-      // Trigger map rendering
-      map.invalidateSize();
+          .catch(err => console.error('Image export failed', err));
+      }
     }
   </script>
 </body>
