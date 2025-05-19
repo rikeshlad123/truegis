@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inkmap Draw + Print</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:," />
+  <link href="https://cdn.jsdelivr.net/npm/ol@7.4.0/ol.css" rel="stylesheet" />
+</head>
+<body>
+  <h1>🗺️ Inkmap Draw + Print</h1>
+
+  <div id="draw-tools">
+    <button id="drawPolygon">🖍️ Draw Polygon</button>
+    <button id="drawLine">📏 Draw Line</button>
+    <button id="drawPoint">📍 Draw Point</button>
+    <button id="clear">❌ Clear</button>
+  </div>
+
+  <div id="controls">
+    <select id="scale">
+      <option value="1000">1:1,000</option>
+      <option value="2500">1:2,500</option>
+      <option value="5000">1:5,000</option>
+      <option value="10000" selected>1:10,000</option>
+    </select>
+    <button id="print">🖨️ Print PNG</button>
+    <button id="print-pdf">📄 Print PDF</button>
+  </div>
+
+  <div id="map"></div>
+  <h2>📥 Output</h2>
+  <img id="output" alt="Print output appears here" />
+
+  <script src="dist/inkmap.js"></script>
+  <script>
+    inkmap.setWorker('dist/inkmap-worker.js');
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.4.0/dist/ol.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

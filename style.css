@@ -1,0 +1,27 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #draw-tools {
+    padding: 10px;
+    background: #ddd;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  #controls {
+    padding: 10px;
+    background: #f0f0f0;
+  }
+  
+  #map {
+    height: 500px;
+    width: 100%;
+  }
+  
+  img#output {
+    max-width: 100%;
+    border: 1px solid #ccc;
+  }
+  
