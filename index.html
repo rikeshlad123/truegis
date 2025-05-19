@@ -1,171 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Leaflet Map Responsive</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Geoman -->
-  <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.css" />
-  <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.13.0/dist/leaflet-geoman.min.js"></script>
-
-  <!-- Geocoder -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
-  <!-- Print -->
-  <script src="https://unpkg.com/leaflet.browser.print/dist/leaflet.browser.print.min.js"></script>
-
+  <meta charset="utf-8" />
+  <title>Inkmap Spec Print</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background: #f2f2f2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .json-buttons {
-      margin: 12px 0 0 0;
-      display: flex;
-      gap: 10px;
-      background: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      z-index: 2000;
-    }
-
-    .json-buttons button {
-      font-size: 13px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-
-    .json-buttons input[type="file"] {
-      display: none;
-    }
-
-    .map-container {
-      flex: 1;
-      width: 100%;
-      max-width: 1200px;
-      height: calc(100% - 60px);
-      margin: 12px 0;
-      box-shadow: 0 0 8px rgba(0,0,0,0.08);
-      background: white;
-      position: relative;
-    }
-
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-
-    .leaflet-top.leaflet-right .leaflet-control {
-      margin-top: 10px;
-    }
-
-    @media print {
-      .json-buttons { display: none !important; }
-    }
-
-    @media (max-width: 600px) {
-      .json-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .json-buttons button {
-        width: 100%;
-      }
-    }
+    body { font-family: sans-serif; padding: 2em; }
+    textarea { width: 100%; height: 300px; }
+    canvas { display: block; margin-top: 2em; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
+  <h1>Inkmap Headless PDF Generator</h1>
+  <p>Edit the spec JSON below and click print:</p>
+  <textarea id="spec">
+{
+  "layers": [
+    {
+      "type": "raster",
+      "url": "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+  ],
+  "size": [297, 210, "mm"],
+  "center": [8.55, 47.37],
+  "scale": 10000,
+  "dpi": 150,
+  "projection": "EPSG:3857"
+}
+  </textarea>
+  <button onclick="runPrint()">🖨️ Print to PDF</button>
+  <canvas id="outputCanvas" width="800" height="600"></canvas>
 
-  <!-- JSON Export/Import buttons (top center) -->
-  <div class="json-buttons">
-    <button onclick="exportGeoJSON()">📤 Export</button>
-    <button onclick="document.getElementById('fileInput').click()">📥 Import</button>
-    <input type="file" id="fileInput" accept=".geojson" onchange="importGeoJSON(event)" />
-  </div>
+  <script type="module">
+    import { print } from 'https://cdn.jsdelivr.net/npm/@camptocamp/inkmap@2.3.0/dist/inkmap.mjs';
+    import { jsPDF } from 'https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.es.min.js';
 
-  <!-- Responsive map container -->
-  <div class="map-container">
-    <div id="map"></div>
-  </div>
+    async function runPrint() {
+      const spec = JSON.parse(document.getElementById('spec').value);
+      const { canvas } = await print(spec);
+      const ctx = document.getElementById('outputCanvas').getContext('2d');
+      ctx.clearRect(0, 0, 800, 600);
+      ctx.drawImage(canvas, 0, 0, 800, 600);
 
-  <script>
-    const map = L.map('map').setView([51.505, -0.09], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    const drawnLayer = L.featureGroup().addTo(map);
-
-    map.pm.addControls({
-      position: 'topleft',
-      drawMarker: true,
-      drawPolygon: true,
-      drawPolyline: true,
-      drawRectangle: true,
-      drawCircle: true,
-      drawCircleMarker: true,
-      editMode: true,
-      dragMode: true,
-      cutPolygon: true,
-      removalMode: true
-    });
-
-    map.on('pm:create', e => drawnLayer.addLayer(e.layer));
-    map.on('pm:remove', e => drawnLayer.removeLayer(e.layer));
-
-    function exportGeoJSON() {
-      const data = drawnLayer.toGeoJSON();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'map.geojson';
-      a.click();
-      URL.revokeObjectURL(url);
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 10, 30, spec.size[0], spec.size[1]);
+      pdf.save('inkmap-output.pdf');
     }
 
-    function importGeoJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const geojson = JSON.parse(e.target.result);
-        const layer = L.geoJSON(geojson, {
-          onEachFeature: (feature, layer) => drawnLayer.addLayer(layer)
-        });
-        map.fitBounds(layer.getBounds());
-      };
-      reader.readAsText(file);
-    }
-
-    // Print Button
-    L.control.browserPrint({
-      position: 'topright',
-      title: 'Print Map',
-      documentTitle: 'Leaflet Map',
-      printModes: ["Portrait", "Landscape", "Auto"],
-      closePopupsOnPrint: false
-    }).addTo(map);
-
-    // Search Box
-    L.Control.geocoder({ position: 'topright' }).addTo(map);
+    window.runPrint = runPrint;
   </script>
 </body>
 </html>
