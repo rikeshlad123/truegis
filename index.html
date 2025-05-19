@@ -2,16 +2,37 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Inkmap Spec Print</title>
+  <title>Inkmap Headless Print</title>
   <style>
-    body { font-family: sans-serif; padding: 2em; }
-    textarea { width: 100%; height: 300px; }
-    canvas { display: block; margin-top: 2em; border: 1px solid #ccc; }
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      max-width: 800px;
+      margin: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      font-family: monospace;
+    }
+    canvas {
+      display: block;
+      margin-top: 2em;
+      max-width: 100%;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      margin-top: 1em;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h1>Inkmap Headless PDF Generator</h1>
-  <p>Edit the spec JSON below and click print:</p>
+  <h1>🖨️ Inkmap: Headless PDF Generator</h1>
+  <p>Paste or edit the spec below and click print:</p>
+
   <textarea id="spec">
 {
   "layers": [
@@ -27,7 +48,8 @@
   "projection": "EPSG:3857"
 }
   </textarea>
-  <button onclick="runPrint()">🖨️ Print to PDF</button>
+
+  <button id="printBtn">🖨️ Print to PDF</button>
   <canvas id="outputCanvas" width="800" height="600"></canvas>
 
   <script type="module">
@@ -35,19 +57,31 @@
     import { jsPDF } from 'https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.es.min.js';
 
     async function runPrint() {
-      const spec = JSON.parse(document.getElementById('spec').value);
-      const { canvas } = await print(spec);
-      const ctx = document.getElementById('outputCanvas').getContext('2d');
-      ctx.clearRect(0, 0, 800, 600);
-      ctx.drawImage(canvas, 0, 0, 800, 600);
+      try {
+        const specText = document.getElementById('spec').value;
+        const spec = JSON.parse(specText);
+        const { canvas } = await print(spec);
 
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 10, 30, spec.size[0], spec.size[1]);
-      pdf.save('inkmap-output.pdf');
+        const ctx = document.getElementById('outputCanvas').getContext('2d');
+        ctx.clearRect(0, 0, 800, 600);
+        ctx.drawImage(canvas, 0, 0, 800, 600);
+
+        const pdf = new jsPDF({
+          orientation: 'landscape',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 10, 30, spec.size[0], spec.size[1]);
+        pdf.save('inkmap-output.pdf');
+      } catch (err) {
+        alert("❌ Error:\n" + err.message);
+        console.error(err);
+      }
     }
 
-    window.runPrint = runPrint;
+    document.getElementById('printBtn').addEventListener('click', runPrint);
   </script>
 </body>
 </html>
