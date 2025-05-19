@@ -5,13 +5,32 @@
   <title>TrueGIS Inkmap Basic Print</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    html, body { margin: 0; padding: 0; font-family: sans-serif; text-align: center; background: #f4f4f4; }
-    textarea { width: 90%; height: 300px; margin: 20px auto; display: block; font-family: monospace; }
-    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 20px; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { margin-top: 20px; }
+    textarea {
+      width: 90%;
+      height: 300px;
+      margin: 20px 0;
+      font-family: monospace;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 40px;
+    }
   </style>
 </head>
 <body>
-  <h1>Inkmap Basic Print App</h1>
+  <h1>🗺️ TrueGIS Inkmap Printer</h1>
   <textarea id="spec">
 {
   "layers": [
@@ -19,10 +38,7 @@
       "type": "WMTS",
       "url": "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg",
       "tileGrid": {
-        "resolutions": [
-          4000, 3750, 3500, 3250, 3000, 2750, 2500, 2250, 2000,
-          1750, 1500, 1250, 1000, 750, 650, 500, 250, 100, 50, 20
-        ],
+        "resolutions": [4000,3750,3500,3250,3000,2750,2500,2250,2000,1750,1500,1250,1000,750,650,500,250,100,50,20],
         "origin": [2420000, 1350000]
       },
       "matrixSet": "EPSG:2056",
@@ -37,19 +53,19 @@
   "projection": "EPSG:2056"
 }
   </textarea>
-  <button onclick="runPrint()">🖨️ Print Map</button>
+  <button onclick="runPrint()">Print Map</button>
 
   <script type="module">
     import { print, downloadBlob } from 'https://cdn.jsdelivr.net/npm/@camptocamp/inkmap@3.0.0/+esm';
 
     window.runPrint = async function () {
-      const specText = document.getElementById("spec").value;
+      const text = document.getElementById('spec').value;
       try {
-        const spec = JSON.parse(specText);
+        const spec = JSON.parse(text);
         const blob = await print(spec);
-        downloadBlob(blob, "map-print.png");
+        downloadBlob(blob, 'inkmap-output.png');
       } catch (err) {
-        alert("Invalid spec or print failed: " + err.message);
+        alert('❌ Print failed: ' + err.message);
         console.error(err);
       }
     };
