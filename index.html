@@ -1,87 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Inkmap Headless Print</title>
+  <meta charset="UTF-8" />
+  <title>TrueGIS Inkmap Basic Print</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 2em;
-      max-width: 800px;
-      margin: auto;
-    }
-    textarea {
-      width: 100%;
-      height: 300px;
-      font-family: monospace;
-    }
-    canvas {
-      display: block;
-      margin-top: 2em;
-      max-width: 100%;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 0.6em 1.2em;
-      font-size: 1em;
-      margin-top: 1em;
-      cursor: pointer;
-    }
+    html, body { margin: 0; padding: 0; font-family: sans-serif; text-align: center; background: #f4f4f4; }
+    textarea { width: 90%; height: 300px; margin: 20px auto; display: block; font-family: monospace; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 20px; }
   </style>
 </head>
 <body>
-  <h1>🖨️ Inkmap: Headless PDF Generator</h1>
-  <p>Paste or edit the spec below and click print:</p>
-
+  <h1>Inkmap Basic Print App</h1>
   <textarea id="spec">
 {
   "layers": [
     {
-      "type": "raster",
-      "url": "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      "type": "WMTS",
+      "url": "https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg",
+      "tileGrid": {
+        "resolutions": [
+          4000, 3750, 3500, 3250, 3000, 2750, 2500, 2250, 2000,
+          1750, 1500, 1250, 1000, 750, 650, 500, 250, 100, 50, 20
+        ],
+        "origin": [2420000, 1350000]
+      },
+      "matrixSet": "EPSG:2056",
+      "projection": "EPSG:2056",
+      "attribution": "© Swisstopo"
     }
   ],
-  "size": [297, 210, "mm"],
-  "center": [8.55, 47.37],
-  "scale": 10000,
+  "size": [210, 297, "mm"],
+  "center": [2600000, 1200000],
   "dpi": 150,
-  "projection": "EPSG:3857"
+  "scale": 25000,
+  "projection": "EPSG:2056"
 }
   </textarea>
-
-  <button id="printBtn">🖨️ Print to PDF</button>
-  <canvas id="outputCanvas" width="800" height="600"></canvas>
+  <button onclick="runPrint()">🖨️ Print Map</button>
 
   <script type="module">
-    import { print } from 'https://cdn.jsdelivr.net/npm/@camptocamp/inkmap@2.3.0/dist/inkmap.mjs';
-    import { jsPDF } from 'https://cdn.jsdelivr.net/npm/jspdf/dist/jspdf.es.min.js';
+    import { print, downloadBlob } from 'https://cdn.jsdelivr.net/npm/@camptocamp/inkmap@3.0.0/+esm';
 
-    async function runPrint() {
+    window.runPrint = async function () {
+      const specText = document.getElementById("spec").value;
       try {
-        const specText = document.getElementById('spec').value;
         const spec = JSON.parse(specText);
-        const { canvas } = await print(spec);
-
-        const ctx = document.getElementById('outputCanvas').getContext('2d');
-        ctx.clearRect(0, 0, 800, 600);
-        ctx.drawImage(canvas, 0, 0, 800, 600);
-
-        const pdf = new jsPDF({
-          orientation: 'landscape',
-          unit: 'mm',
-          format: 'a4'
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 10, 30, spec.size[0], spec.size[1]);
-        pdf.save('inkmap-output.pdf');
+        const blob = await print(spec);
+        downloadBlob(blob, "map-print.png");
       } catch (err) {
-        alert("❌ Error:\n" + err.message);
+        alert("Invalid spec or print failed: " + err.message);
         console.error(err);
       }
-    }
-
-    document.getElementById('printBtn').addEventListener('click', runPrint);
+    };
   </script>
 </body>
 </html>
