@@ -2,28 +2,43 @@ body {
   font-family: sans-serif;
   margin: 0;
   padding: 0;
+  background-color: #121212;
+  color: #ffffff;
 }
 
 #draw-tools, #controls {
   padding: 10px;
-  background: #f0f0f0;
+  background: #1e1e1e;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  border-bottom: 1px solid #333;
 }
 
 button {
   font-size: 16px;
   padding: 8px 12px;
   flex: 1 0 auto;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #333;
 }
 
 #map {
   height: 70vh;
   width: 100%;
+  border-top: 1px solid #333;
 }
 
 img#output {
   max-width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid #444;
+  background-color: #1e1e1e;
+  padding: 4px;
 }
