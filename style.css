@@ -6,6 +6,17 @@ body {
   color: #ffffff;
 }
 
+#ad-banner {
+  height: 90px;
+  background-color: #1e1e1e;
+  color: #aaa;
+  text-align: center;
+  line-height: 90px;
+  font-weight: bold;
+  font-size: 18px;
+  border-bottom: 1px solid #333;
+}
+
 #draw-tools, #controls {
   padding: 10px;
   background: #1e1e1e;
